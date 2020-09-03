@@ -10,3 +10,4 @@ edition = "2018"
 rsa = "0.3.0"
 distributed-rsa = { git = "https://github.com/project-aias/distributed-rsa.git" }
 aias-core = { git = "https://github.com/project-aias/aias-core.git" }
+rand = "0.7.3"
