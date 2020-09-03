@@ -49,7 +49,7 @@ dependencies = [
  "aes",
  "base64",
  "block-modes",
- "distributed-rsa 0.1.0 (git+https://github.com/project-aias/distributed-rsa?rev=f8b52b6)",
+ "distributed-rsa",
  "fair-blind-signature 0.1.0 (git+https://github.com/project-aias/fair-blind-signature?rev=20b451b)",
  "hex-literal",
  "libc",
@@ -69,7 +69,7 @@ name = "aias-opener"
 version = "0.1.0"
 dependencies = [
  "aias-core",
- "distributed-rsa 0.1.0 (git+https://github.com/project-aias/distributed-rsa.git)",
+ "distributed-rsa",
  "fair-blind-signature 0.1.0 (git+https://github.com/project-aias/fair-blind-signature)",
  "rand 0.7.3",
  "rsa",
@@ -163,17 +163,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d3dd60d1080a57a05ab032377049e0591415d2b31afd7028356dbf3cc6dcb066"
 dependencies = [
  "generic-array",
-]
-
-[[package]]
-name = "distributed-rsa"
-version = "0.1.0"
-source = "git+https://github.com/project-aias/distributed-rsa.git#03c6628202c71231f0c4caaf6ef252027ec76523"
-dependencies = [
- "num-bigint-dig 0.3.0",
- "num-traits",
- "rand 0.7.3",
- "rsa",
 ]
 
 [[package]]
