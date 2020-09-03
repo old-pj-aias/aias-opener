@@ -34,7 +34,7 @@ fn main() {
     let mut shares = Vec::new();
 
     for k in &priv_keys {
-        // correct plain share if its owner agreed
+        // collect plain share if its owner agreed
         if true {
             let share = k.generate_share(c.clone());
             shares.push(share);
