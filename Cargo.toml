@@ -7,3 +7,6 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rsa = "0.3.0"
+distributed-rsa = { git = "https://github.com/project-aias/distributed-rsa.git" }
+aias-core = { git = "https://github.com/project-aias/aias-core.git" }
