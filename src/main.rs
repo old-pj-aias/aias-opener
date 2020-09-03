@@ -20,7 +20,11 @@ fn generate_distributed_keys() -> (RSAPubKey, DistributedRSAPrivKey) {
     (d_pubkey, d_privkey)
 }
 
-fn collect_shares() -> PlainShareSet {
+#[allow(dead_code)]
+fn generate_shares() -> PlainShareSet {
+    use std::fs::File;
+    use std::io::Write;
+
     let message_str = "hogehoge".to_string();
     let message = message_str.as_bytes();
     let message_biguint = BigUint::from_bytes_le(message);
@@ -33,10 +37,18 @@ fn collect_shares() -> PlainShareSet {
 
     let mut shares = Vec::new();
 
+    let mut f = File::create("shares.txt")
+        .unwrap();
     for k in &priv_keys {
+
         // collect plain share if its owner agreed
         if true {
             let share = k.generate_share(c.clone());
+
+            let share_str = serde_json::to_string(&share).unwrap();
+            f.write_all(share_str.as_bytes()).unwrap();
+            f.write_all(b"\n").unwrap();
+
             shares.push(share);
         }
     }
@@ -44,6 +56,27 @@ fn collect_shares() -> PlainShareSet {
     let plain_share_set = PlainShareSet { plain_shares: shares };
 
     return plain_share_set;
+}
+
+fn collect_shares() -> PlainShareSet {
+    use std::io::{self};
+
+    let stdin = io::stdin();
+
+    let mut plain_shares = Vec::new();
+    let mut buf = String::new();
+
+    while let Ok(l) = stdin.read_line(&mut buf) {
+        if l < 2 { break; }
+
+        let share = serde_json::from_str(&buf)
+            .expect("failed to parse json");
+
+        plain_shares.push(share);
+        buf.clear();
+    }
+
+    PlainShareSet { plain_shares }
 }
 
 fn main() {

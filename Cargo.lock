@@ -73,6 +73,7 @@ dependencies = [
  "fair-blind-signature 0.1.0 (git+https://github.com/project-aias/fair-blind-signature)",
  "rand 0.7.3",
  "rsa",
+ "serde_json",
 ]
 
 [[package]]
