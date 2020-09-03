@@ -20,12 +20,12 @@ fn generate_distributed_keys() -> (RSAPubKey, DistributedRSAPrivKey) {
     (d_pubkey, d_privkey)
 }
 
-fn main() {
-    let (d_pubkey, d_privkey) = generate_distributed_keys();
-
+fn collect_shares() -> PlainShareSet {
     let message_str = "hogehoge".to_string();
     let message = message_str.as_bytes();
     let message_biguint = BigUint::from_bytes_le(message);
+
+    let (d_pubkey, d_privkey) = generate_distributed_keys();
 
     let c = d_pubkey.encrypt_core(message_biguint);
 
@@ -42,6 +42,14 @@ fn main() {
     }
 
     let plain_share_set = PlainShareSet { plain_shares: shares };
+
+    return plain_share_set;
+}
+
+fn main() {
+    let message_str = "hogehoge".to_string();
+
+    let plain_share_set = collect_shares();
 
     let decrypted = plain_share_set.decrypt();
     let decrypted_str = String::from_utf8(decrypted.to_bytes_le()).unwrap();
