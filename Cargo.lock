@@ -70,6 +70,7 @@ version = "0.1.0"
 dependencies = [
  "aias-core",
  "distributed-rsa 0.1.0 (git+https://github.com/project-aias/distributed-rsa.git)",
+ "rand 0.7.3",
  "rsa",
 ]
 
