@@ -3,6 +3,7 @@ use rsa::{RSAPrivateKey, RSAPublicKey, BigUint, pem};
 use aias_core::crypto::{DistributedRSAPrivKey};
 use aias_core::judge;
 use distributed_rsa::DistributedRSAPrivateKey;
+use fair_blind_signature::Signature;
 
 extern crate openssl;
 use openssl::rsa::{Rsa};
@@ -48,11 +49,13 @@ fn create_share_stdin(secret_key_file: &str) {
         .expect("failed to parse secret key");
 
     let mut stdin = io::stdin();
-    let cipher_str = read_content(&mut stdin, "stdin");
-    let cipher: BigUint = serde_json::from_str(&cipher_str)
+    let fbs_str = read_content(&mut stdin, "stdin");
+    let fbs: Signature = serde_json::from_str(&fbs_str)
         .expect("failed to parse cipher");
+    let encrypted_id_str = fbs.encrypted_id.v[0].clone();
+    let encrypted_id: BigUint = serde_json::from_str(&encrypted_id_str).unwrap();
     
-    let plain_share = secret_key.generate_share(cipher);
+    let plain_share = secret_key.generate_share(encrypted_id);
 
     let share_json = serde_json::to_string(&plain_share)
         .expect("failed to parse share");
