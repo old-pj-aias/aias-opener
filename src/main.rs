@@ -40,7 +40,11 @@ fn generate_distributed_keys(){
 fn open() {
     let shares = collect_shares();
 
-    // open FBS from shares
+    let decrypted = shares.decrypt();
+    let decrypted_bytes = decrypted.to_bytes_le();
+    let decrypted_str = String::from_utf8(decrypted_bytes).expect("failed to convert decrypted data into string");
+
+    println!("opened: {}", decrypted_str);
 }
 
 fn collect_shares() -> PlainShareSet {
