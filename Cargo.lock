@@ -44,7 +44,7 @@ dependencies = [
 [[package]]
 name = "aias-core"
 version = "0.1.0"
-source = "git+https://github.com/project-aias/aias-core.git?rev=74fef06#74fef06e67d71f3250682b64e998d0cb97fe9bc7"
+source = "git+https://github.com/project-aias/aias-core.git?rev=70f9d9b#70f9d9b9af782848d6439595684eddf6474e32ea"
 dependencies = [
  "aes",
  "base64",

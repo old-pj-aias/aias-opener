@@ -1,8 +1,7 @@
 use rsa::{RSAPrivateKey, RSAPublicKey, pem};
 
 use aias_core::crypto::{DistributedRSAPrivKey};
-
-use distributed_rsa::PlainShareSet;
+use aias_core::judge;
 
 extern crate openssl;
 use openssl::rsa::{Rsa};
@@ -10,7 +9,7 @@ use openssl::rsa::{Rsa};
 use std::process::{Command, Stdio};
 
 
-fn generate_distributed_keys(){
+fn generate_distributed_keys() {
     let rsa = Rsa::generate(2048).unwrap();
 
     let privkey = rsa.private_key_to_pem().unwrap();
@@ -37,35 +36,30 @@ fn generate_distributed_keys(){
     reset_screen();
 }
 
-fn open() {
-    let shares = collect_shares();
+fn open_stdin() -> String {
+    let shares = read_lines_stdin();
 
-    let decrypted = shares.decrypt();
-    let decrypted_bytes = decrypted.to_bytes_le();
-    let decrypted_str = String::from_utf8(decrypted_bytes).expect("failed to convert decrypted data into string");
+    let id_str = judge::open(shares)
+        .expect("failed to open Signature");
 
-    println!("opened: {}", decrypted_str);
+    id_str
 }
 
-fn collect_shares() -> PlainShareSet {
+fn read_lines_stdin() -> Vec<String> {
     use std::io::{self};
 
     let stdin = io::stdin();
 
-    let mut plain_shares = Vec::new();
+    let mut v = Vec::new();
     let mut buf = String::new();
 
     while let Ok(l) = stdin.read_line(&mut buf) {
         if l < 2 { break; }
-
-        let share = serde_json::from_str(&buf)
-            .expect("failed to parse json");
-
-        plain_shares.push(share);
+        v.push(buf.clone());
         buf.clear();
     }
 
-    PlainShareSet { plain_shares }
+    v
 }
 
 fn reset_screen() {
@@ -78,22 +72,8 @@ fn reset_screen() {
 }
 
 fn main() {
-    // let args: Vec<String> = env::args().collect();
-
-    // let query = &args[1];
-
-    // if query == "generate" { 
-    //     let (d_pubkey, d_privkey) = generate_distributed_keys();
-    //     println!("pubkey\n{}", d_pubkey);
-
-    // }    
-
-    // let plain_share_set = collect_shares();
-
-    // let decrypted = plain_share_set.decrypt();
-    // let decrypted_str = String::from_utf8(decrypted.to_bytes_le()).unwrap();
-
     let mut args = std::env::args();
+
     let program = args.next().expect("failed to get program name");
     let command = match args.next() {
         Some(c) => c,
@@ -106,21 +86,49 @@ fn main() {
     if command == "generate" {
         generate_distributed_keys();
     } else if command == "open" {
-        open();
+        let id_str = open_stdin();
+        println!("id opened: {}", id_str);
     }
 }
 
-#[test]
-fn test() {
-    let message_str = "hogehoge".to_string();
+#[cfg(test)]
+mod tests {
+    use std::process::Command;
 
-    let plain_share_set = collect_shares();
+    #[test]
+    fn generate() {
+        use std::process::Stdio;
 
-    let decrypted = plain_share_set.decrypt();
-    let decrypted_str = String::from_utf8(decrypted.to_bytes_le()).unwrap();
+        let new_lines: String = std::iter::repeat('\n').take(100).collect();
+        println!("{}", new_lines);
 
-    println!("message:\t'{}'", message_str);
-    println!("decrypted:\t'{}'", decrypted_str);
+        let name = cmd_name();
+        Command::new(name)
+            .arg("generate")
+            .stdin(Stdio::piped())
+            .output()
+            .expect("failed to execute process");
+    }
 
-    assert_eq!(message_str, decrypted_str);
+    #[test]
+    #[ignore]
+    fn open() {
+        use std::fs::File;
+
+        let name = cmd_name();
+
+        let f = File::open("./shares.txt").unwrap();
+
+        let output = Command::new(name)
+            .arg("open")
+            .stdin(f)
+            .output()
+            .expect("failed to execute process");
+
+        assert_eq!(String::from_utf8_lossy(&output.stdout), format!("id opened: {}\n", "hogehoge"));
+    }
+
+    fn cmd_name() -> String {
+        std::env::args().next().unwrap().to_string()
+    }
 }
