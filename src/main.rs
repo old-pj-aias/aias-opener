@@ -1,61 +1,43 @@
-use rsa::{RSAPrivateKey, RSAPublicKey, BigUint};
+use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey, PaddingScheme, pem, BigUint};
 
 use aias_core::crypto::{DistributedRSAPrivKey, RSAPubKey};
 
 use distributed_rsa::PlainShareSet;
+use std::env;
+
+extern crate openssl;
+use openssl::rsa::{Rsa};
+
+use std::process::{Command, Stdio};
 
 
-fn generate_distributed_keys() -> (RSAPubKey, DistributedRSAPrivKey) {
-    let mut rng = rand::rngs::OsRng;
+fn generate_distributed_keys(){
+    let rsa = Rsa::generate(2048).unwrap();
 
-    let bits = 2048;
+    let privkey = rsa.private_key_to_pem().unwrap();
+    let pubkey = rsa.public_key_to_pem().unwrap();
+    
 
-    let private_key = RSAPrivateKey::new(&mut rng, bits)
-        .expect("failed to generate private key");
-    let public_key = RSAPublicKey::from(&private_key);
+    let _privkey = pem::parse(privkey).expect("failed to parse pem");
+    let _privkey = RSAPrivateKey::from_pkcs1(&_privkey.contents).expect("failed to parse pkcs1");
 
-    let d_privkey = DistributedRSAPrivKey::new(&private_key, &public_key);
-    let d_pubkey = RSAPubKey { public_key: public_key };
+    let _pubkey = pem::parse(pubkey).expect("failed to parse pem");
+    let _pubkey = RSAPrivateKey::from_pkcs8(&_pubkey.contents).expect("failed to parse pkcs8");
 
-    (d_pubkey, d_privkey)
-}
+    let d_privkeys = DistributedRSAPrivKey::new(&_privkey, &_pubkey);
 
-#[allow(dead_code)]
-fn generate_shares() -> PlainShareSet {
-    use std::fs::File;
-    use std::io::Write;
+    for d_privey in d_privkeys.private_key_set.private_keys {
+        let key = serde_json::to_string(&d_privey).unwrap();
+        println!("{}", key);
 
-    let message_str = "hogehoge".to_string();
-    let message = message_str.as_bytes();
-    let message_biguint = BigUint::from_bytes_le(message);
+        let mut s = String::new();
+        std::io::stdin().read_line(&mut s).unwrap();
 
-    let (d_pubkey, d_privkey) = generate_distributed_keys();
-
-    let c = d_pubkey.encrypt_core(message_biguint);
-
-    let priv_keys = d_privkey.private_key_set.private_keys;
-
-    let mut shares = Vec::new();
-
-    let mut f = File::create("shares.txt")
-        .unwrap();
-    for k in &priv_keys {
-
-        // collect plain share if its owner agreed
-        if true {
-            let share = k.generate_share(c.clone());
-
-            let share_str = serde_json::to_string(&share).unwrap();
-            f.write_all(share_str.as_bytes()).unwrap();
-            f.write_all(b"\n").unwrap();
-
-            shares.push(share);
-        }
-    }
-
-    let plain_share_set = PlainShareSet { plain_shares: shares };
-
-    return plain_share_set;
+        Command::new("reset")
+            .stdout(Stdio::piped())
+            .spawn()
+            .expect("Failed to start sed process");
+    };
 }
 
 fn collect_shares() -> PlainShareSet {
@@ -80,6 +62,26 @@ fn collect_shares() -> PlainShareSet {
 }
 
 fn main() {
+    // let args: Vec<String> = env::args().collect();
+
+    // let query = &args[1];
+
+    // if query == "generate" { 
+    //     let (d_pubkey, d_privkey) = generate_distributed_keys();
+    //     println!("pubkey\n{}", d_pubkey);
+
+    // }    
+
+    // let plain_share_set = collect_shares();
+
+    // let decrypted = plain_share_set.decrypt();
+    // let decrypted_str = String::from_utf8(decrypted.to_bytes_le()).unwrap();
+
+    generate_distributed_keys();
+}
+
+#[test]
+fn test() {
     let message_str = "hogehoge".to_string();
 
     let plain_share_set = collect_shares();
