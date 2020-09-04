@@ -18,26 +18,24 @@ fn generate_distributed_keys(){
     let pubkey = rsa.public_key_to_pem().unwrap();
     
 
-    let _privkey = pem::parse(privkey).expect("failed to parse pem");
-    let _privkey = RSAPrivateKey::from_pkcs1(&_privkey.contents).expect("failed to parse pkcs1");
+    let privkey = pem::parse(privkey).expect("failed to parse pem");
+    let privkey = RSAPrivateKey::from_pkcs1(&privkey.contents).expect("failed to parse pkcs1");
 
-    let _pubkey = pem::parse(pubkey).expect("failed to parse pem");
-    let _pubkey = RSAPrivateKey::from_pkcs8(&_pubkey.contents).expect("failed to parse pkcs8");
+    let pubkey = pem::parse(pubkey).expect("failed to parse pem");
+    let pubkey = RSAPublicKey::from_pkcs8(&pubkey.contents).expect("failed to parse pkcs8");
 
-    let d_privkeys = DistributedRSAPrivKey::new(&_privkey, &_pubkey);
+    let d_privkeys = DistributedRSAPrivKey::new(&privkey, &pubkey);
 
     for d_privey in d_privkeys.private_key_set.private_keys {
+        reset_screen();
+
         let key = serde_json::to_string(&d_privey).unwrap();
         println!("{}", key);
 
         let mut s = String::new();
         std::io::stdin().read_line(&mut s).unwrap();
-
-        Command::new("reset")
-            .stdout(Stdio::piped())
-            .spawn()
-            .expect("Failed to start sed process");
     };
+    reset_screen();
 }
 
 fn collect_shares() -> PlainShareSet {
@@ -59,6 +57,15 @@ fn collect_shares() -> PlainShareSet {
     }
 
     PlainShareSet { plain_shares }
+}
+
+fn reset_screen() {
+    let mut child = Command::new("reset")
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to start sed process");
+    child.wait()
+        .expect("failed to wait child");
 }
 
 fn main() {
