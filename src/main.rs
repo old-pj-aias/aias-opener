@@ -1,7 +1,8 @@
-use rsa::{RSAPrivateKey, RSAPublicKey, pem};
+use rsa::{RSAPrivateKey, RSAPublicKey, BigUint, pem};
 
 use aias_core::crypto::{DistributedRSAPrivKey};
 use aias_core::judge;
+use distributed_rsa::DistributedRSAPrivateKey;
 
 extern crate openssl;
 use openssl::rsa::{Rsa};
@@ -36,6 +37,29 @@ fn generate_distributed_keys() {
     reset_screen();
 }
 
+fn create_share_stdin(secret_key_file: &str) {
+    use std::fs::File;
+    use std::io;
+
+    let mut f = File::open(secret_key_file)
+        .expect("failed to read secret key");
+    let secret_key_str = read_content(&mut f, secret_key_file);
+    let secret_key: DistributedRSAPrivateKey = serde_json::from_str(&secret_key_str)
+        .expect("failed to parse secret key");
+
+    let mut stdin = io::stdin();
+    let cipher_str = read_content(&mut stdin, "stdin");
+    let cipher: BigUint = serde_json::from_str(&cipher_str)
+        .expect("failed to parse cipher");
+    
+    let plain_share = secret_key.generate_share(cipher);
+
+    let share_json = serde_json::to_string(&plain_share)
+        .expect("failed to parse share");
+    
+    println!("{}", share_json);
+}
+
 fn open_stdin() -> String {
     let shares = read_lines_stdin();
 
@@ -62,6 +86,21 @@ fn read_lines_stdin() -> Vec<String> {
     v
 }
 
+fn read_content<R: std::io::Read>(src: &mut R, src_name: &str) -> String {
+    let mut buf = String::new();
+    match src.read_to_string(&mut buf) {
+        Ok(0) => {
+            panic!("Unexpected EOF reading {}", src_name);
+        },
+        Err(e) => {
+            panic!("failed to read {}: {}", src_name, e);
+        },
+        _ => ()
+    }
+
+    return buf;
+}
+
 fn reset_screen() {
     let mut child = Command::new("reset")
         .stdout(Stdio::piped())
@@ -71,24 +110,42 @@ fn reset_screen() {
         .expect("failed to wait child");
 }
 
-fn main() {
+fn main() -> Result<(), ()> {
     let mut args = std::env::args();
 
-    let program = args.next().expect("failed to get program name");
-    let command = match args.next() {
-        Some(c) => c,
-        None => {
-            eprintln!("usage: {} [generate | open]", program);
-            return
-        }
-    };
+    // ignore program name (argv[0])
+    args.next().expect("failed to get program name");
+    let command = get_next(&mut args);
 
     if command == "generate" {
-        generate_distributed_keys();
+        let q = get_next(&mut args);
+        if q == "key" {
+            generate_distributed_keys();
+        } else if q == "share" {
+            let secret_key = get_next(&mut args);
+            create_share_stdin(&secret_key);
+        } else {
+            usage_exit();
+        }
     } else if command == "open" {
         let id_str = open_stdin();
         println!("id opened: {}", id_str);
     }
+
+    Ok(())
+}
+
+fn get_next<T: Iterator>(i: &mut T) -> T::Item {
+    match i.next() {
+        Some(c) => c,
+        None => usage_exit(),
+    }
+}
+
+fn usage_exit() -> ! {
+    let mut args = std::env::args();
+    eprintln!("usage: {} [open | generate [key | share]]", args.next().unwrap());
+    panic!();
 }
 
 #[cfg(test)]
