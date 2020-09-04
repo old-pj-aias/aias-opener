@@ -1,61 +1,46 @@
-use rsa::{RSAPrivateKey, RSAPublicKey, BigUint};
+use rsa::{RSAPrivateKey, RSAPublicKey, pem};
 
-use aias_core::crypto::{DistributedRSAPrivKey, RSAPubKey};
+use aias_core::crypto::{DistributedRSAPrivKey};
 
 use distributed_rsa::PlainShareSet;
 
+extern crate openssl;
+use openssl::rsa::{Rsa};
 
-fn generate_distributed_keys() -> (RSAPubKey, DistributedRSAPrivKey) {
-    let mut rng = rand::rngs::OsRng;
+use std::process::{Command, Stdio};
 
-    let bits = 2048;
 
-    let private_key = RSAPrivateKey::new(&mut rng, bits)
-        .expect("failed to generate private key");
-    let public_key = RSAPublicKey::from(&private_key);
+fn generate_distributed_keys(){
+    let rsa = Rsa::generate(2048).unwrap();
 
-    let d_privkey = DistributedRSAPrivKey::new(&private_key, &public_key);
-    let d_pubkey = RSAPubKey { public_key: public_key };
+    let privkey = rsa.private_key_to_pem().unwrap();
+    let pubkey = rsa.public_key_to_pem().unwrap();
+    
 
-    (d_pubkey, d_privkey)
+    let privkey = pem::parse(privkey).expect("failed to parse pem");
+    let privkey = RSAPrivateKey::from_pkcs1(&privkey.contents).expect("failed to parse pkcs1");
+
+    let pubkey = pem::parse(pubkey).expect("failed to parse pem");
+    let pubkey = RSAPublicKey::from_pkcs8(&pubkey.contents).expect("failed to parse pkcs8");
+
+    let d_privkeys = DistributedRSAPrivKey::new(&privkey, &pubkey);
+
+    for d_privey in d_privkeys.private_key_set.private_keys {
+        reset_screen();
+
+        let key = serde_json::to_string(&d_privey).unwrap();
+        println!("{}", key);
+
+        let mut s = String::new();
+        std::io::stdin().read_line(&mut s).unwrap();
+    };
+    reset_screen();
 }
 
-#[allow(dead_code)]
-fn generate_shares() -> PlainShareSet {
-    use std::fs::File;
-    use std::io::Write;
+fn open() {
+    let shares = collect_shares();
 
-    let message_str = "hogehoge".to_string();
-    let message = message_str.as_bytes();
-    let message_biguint = BigUint::from_bytes_le(message);
-
-    let (d_pubkey, d_privkey) = generate_distributed_keys();
-
-    let c = d_pubkey.encrypt_core(message_biguint);
-
-    let priv_keys = d_privkey.private_key_set.private_keys;
-
-    let mut shares = Vec::new();
-
-    let mut f = File::create("shares.txt")
-        .unwrap();
-    for k in &priv_keys {
-
-        // collect plain share if its owner agreed
-        if true {
-            let share = k.generate_share(c.clone());
-
-            let share_str = serde_json::to_string(&share).unwrap();
-            f.write_all(share_str.as_bytes()).unwrap();
-            f.write_all(b"\n").unwrap();
-
-            shares.push(share);
-        }
-    }
-
-    let plain_share_set = PlainShareSet { plain_shares: shares };
-
-    return plain_share_set;
+    // open FBS from shares
 }
 
 fn collect_shares() -> PlainShareSet {
@@ -79,7 +64,50 @@ fn collect_shares() -> PlainShareSet {
     PlainShareSet { plain_shares }
 }
 
+fn reset_screen() {
+    let mut child = Command::new("reset")
+        .stdout(Stdio::piped())
+        .spawn()
+        .expect("Failed to start sed process");
+    child.wait()
+        .expect("failed to wait child");
+}
+
 fn main() {
+    // let args: Vec<String> = env::args().collect();
+
+    // let query = &args[1];
+
+    // if query == "generate" { 
+    //     let (d_pubkey, d_privkey) = generate_distributed_keys();
+    //     println!("pubkey\n{}", d_pubkey);
+
+    // }    
+
+    // let plain_share_set = collect_shares();
+
+    // let decrypted = plain_share_set.decrypt();
+    // let decrypted_str = String::from_utf8(decrypted.to_bytes_le()).unwrap();
+
+    let mut args = std::env::args();
+    let program = args.next().expect("failed to get program name");
+    let command = match args.next() {
+        Some(c) => c,
+        None => {
+            eprintln!("usage: {} [generate | open]", program);
+            return
+        }
+    };
+
+    if command == "generate" {
+        generate_distributed_keys();
+    } else if command == "open" {
+        open();
+    }
+}
+
+#[test]
+fn test() {
     let message_str = "hogehoge".to_string();
 
     let plain_share_set = collect_shares();
