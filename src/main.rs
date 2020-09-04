@@ -23,7 +23,7 @@ fn generate_distributed_keys() {
     let pubkey = pem::parse(pubkey).expect("failed to parse pem");
     let pubkey = RSAPublicKey::from_pkcs8(&pubkey.contents).expect("failed to parse pkcs8");
 
-    let d_privkeys = DistributedRSAPrivKey::new(&privkey, &pubkey);
+    let d_privkeys = DistributedRSAPrivKey::new(&privkey, &pubkey, 3);
 
     for d_privey in d_privkeys.private_key_set.private_keys {
         reset_screen();
