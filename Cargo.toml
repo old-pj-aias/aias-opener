@@ -9,8 +9,8 @@ edition = "2018"
 [dependencies]
 rsa = "0.3.0"
 distributed-rsa = { git = "https://github.com/project-aias/distributed-rsa", rev="f8b52b6" }
-aias-core = { git = "https://github.com/project-aias/aias-core.git" }
-fair-blind-signature = { git = "https://github.com/project-aias/fair-blind-signature" }
+aias-core = { git = "https://github.com/project-aias/aias-core.git", rev="70f9d9b" }
+fair-blind-signature = { git = "https://github.com/project-aias/fair-blind-signature", rev="2565e6d" }
 rand = "0.7.3"
 serde_json = "1.0"
 openssl = { version = "0.10", features = ["vendored"] }

@@ -44,13 +44,13 @@ dependencies = [
 [[package]]
 name = "aias-core"
 version = "0.1.0"
-source = "git+https://github.com/project-aias/aias-core.git#ab088034db78a42adbd092a0fd2319216b899a9a"
+source = "git+https://github.com/project-aias/aias-core.git?rev=70f9d9b#70f9d9b9af782848d6439595684eddf6474e32ea"
 dependencies = [
  "aes",
  "base64",
  "block-modes",
  "distributed-rsa",
- "fair-blind-signature 0.1.0 (git+https://github.com/project-aias/fair-blind-signature?rev=20b451b)",
+ "fair-blind-signature",
  "hex-literal",
  "libc",
  "num-bigint-dig 0.3.0",
@@ -70,7 +70,7 @@ version = "0.1.0"
 dependencies = [
  "aias-core",
  "distributed-rsa",
- "fair-blind-signature 0.1.0 (git+https://github.com/project-aias/fair-blind-signature)",
+ "fair-blind-signature",
  "openssl",
  "rand 0.7.3",
  "rsa",
@@ -194,20 +194,7 @@ dependencies = [
 [[package]]
 name = "fair-blind-signature"
 version = "0.1.0"
-source = "git+https://github.com/project-aias/fair-blind-signature#20b451b77cf1936ca32e118e9892e673158c0ab4"
-dependencies = [
- "num-bigint-dig 0.3.0",
- "num-traits",
- "rand 0.7.3",
- "rsa",
- "serde",
- "sha2",
-]
-
-[[package]]
-name = "fair-blind-signature"
-version = "0.1.0"
-source = "git+https://github.com/project-aias/fair-blind-signature?rev=20b451b#20b451b77cf1936ca32e118e9892e673158c0ab4"
+source = "git+https://github.com/project-aias/fair-blind-signature?rev=2565e6d#2565e6dce48832ad61bae6f7a2de88e04ebf1d35"
 dependencies = [
  "num-bigint-dig 0.3.0",
  "num-traits",
