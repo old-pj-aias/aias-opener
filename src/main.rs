@@ -1,9 +1,8 @@
-use rsa::{PublicKey, RSAPrivateKey, RSAPublicKey, PaddingScheme, pem, BigUint};
+use rsa::{RSAPrivateKey, RSAPublicKey, pem};
 
-use aias_core::crypto::{DistributedRSAPrivKey, RSAPubKey};
+use aias_core::crypto::{DistributedRSAPrivKey};
 
 use distributed_rsa::PlainShareSet;
-use std::env;
 
 extern crate openssl;
 use openssl::rsa::{Rsa};
@@ -36,6 +35,12 @@ fn generate_distributed_keys(){
         std::io::stdin().read_line(&mut s).unwrap();
     };
     reset_screen();
+}
+
+fn open() {
+    let shares = collect_shares();
+
+    // open FBS from shares
 }
 
 fn collect_shares() -> PlainShareSet {
@@ -84,7 +89,21 @@ fn main() {
     // let decrypted = plain_share_set.decrypt();
     // let decrypted_str = String::from_utf8(decrypted.to_bytes_le()).unwrap();
 
-    generate_distributed_keys();
+    let mut args = std::env::args();
+    let program = args.next().expect("failed to get program name");
+    let command = match args.next() {
+        Some(c) => c,
+        None => {
+            eprintln!("usage: {} [generate | open]", program);
+            return
+        }
+    };
+
+    if command == "generate" {
+        generate_distributed_keys();
+    } else if command == "open" {
+        open();
+    }
 }
 
 #[test]
